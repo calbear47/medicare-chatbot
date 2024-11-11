@@ -1,0 +1,50 @@
+# Dockerfile.dev
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    DJANGO_SETTINGS_MODULE=config.settings.local
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including development tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    python3-dev \
+    poppler-utils \
+    tesseract-ocr \
+    # Development tools
+    vim \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies including development packages
+COPY requirements/ requirements/
+RUN pip install --no-cache-dir -r requirements/local.txt
+
+# Copy project files
+COPY . .
+
+# Copy development entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Create necessary directories with appropriate permissions
+RUN mkdir -p /app/data/raw_pdfs /app/data/processed /app/static /app/media \
+    && chmod -R 777 /app/data
+
+# Create and switch to non-root user but allow sudo
+RUN useradd -m -s /bin/bash developer && \
+    chown -R developer:developer /app
+USER developer
+
+# Set default command for development
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -1,4 +1,4 @@
-# Medicare Plan Assistant Take-Home Assignment
+# Medicare Plan Chatbot
 
 ## Overview
 Create a proof-of-concept chatbot API that helps users understand and compare Medicare plans using RAG (Retrieval Augmented Generation).
@@ -56,7 +56,7 @@ pip install podman-compose
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone git@github.com:calbear47/medicare-chatbot.git
 cd medicare-chatbot
 ```
 
@@ -122,7 +122,7 @@ To answer these question, complete the TODOs in:
 POST /api/query/
 {
     "query": "What is the copay for primary care visits?",
-    "plan_ids": ["plan_a", "plan_b"]  # Optional
+    "plan_ids": ["002", "003"]  # Optional
 }
 ```
 
@@ -132,36 +132,10 @@ POST /api/upload-pdf/
 Content-Type: multipart/form-data
 {
     "file": [PDF File],
-    "plan_id": "plan_a",
-    "year": 2024
+    "plan_id": "003",
+    "year": 2025
 }
 ```
-
-## Evaluation Criteria
-
-### PDF Processing (30%)
-- Accurate text extraction
-- Proper cleaning and structuring
-- Section identification
-- Error handling
-
-### RAG Implementation (40%)
-- Vector store setup and usage
-- Quality of response generation
-- Context retrieval accuracy
-- Plan comparison handling
-
-### Code Quality (20%)
-- Clean, readable code
-- Good documentation
-- Error handling
-- Type hints and docstrings
-
-### Documentation (10%)
-- Implementation explanation
-- Assumptions documented
-- Clear code comments
-
 ## Troubleshooting
 
 If you encounter memory issues:

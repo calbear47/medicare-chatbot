@@ -1,8 +1,10 @@
 django==5.0.2
 djangorestframework==3.14.0
+django-cors-headers==4.3.1
 PyPDF2==3.0.1
 python-magic==0.4.27
 chromadb==0.4.22
+numpy==1.26.4 
 sentence-transformers==2.3.1
 ollama==0.1.6
 python-dotenv==1.0.1

@@ -1,9 +1,9 @@
 # Medicare Plan Assistant Take-Home Assignment
 
 ## Overview
-Create a proof-of-concept chatbot that helps users understand and compare Medicare plans using RAG (Retrieval Augmented Generation). This project tests your ability to process PDFs, implement RAG, and create a functional API.
+Create a proof-of-concept chatbot API that helps users understand and compare Medicare plans using RAG (Retrieval Augmented Generation).
 
-**Time Expectation:** 2-3 hours
+**Time Expectation:** 3 hours
 
 ## Tech Stack
 - **LLM**: Mistral via Ollama
@@ -11,80 +11,130 @@ Create a proof-of-concept chatbot that helps users understand and compare Medica
 - **Backend**: Django/DRF
 - **PDF Processing**: PyPDF2
 
-## Prerequisites
-- Docker and Docker Compose
+## System Requirements
+- Minimum 8GB RAM (Mistral LLM requires at least 6GB available memory)
+- 10GB free disk space
 - Git
 - Code editor
 
-## Quick Start
-1. Clone this repository:
+## Setup Instructions
+
+### Using Docker:
+- Docker Desktop with at least 8GB memory allocated
+
+### Using Podman (recommended for Mac users):
+1. Install Podman:
+```bash
+brew install podman
+```
+
+2. Initialize Podman machine with adequate memory:
+
+For Apple Silicon Macs (M1/M2/M3):
+```bash
+# Stop and remove any existing machine
+podman machine stop
+podman machine rm
+
+# Create new machine with 8GB memory
+podman machine init --memory 8192 --disk-size 20
+podman machine start
+```
+
+For Intel Macs:
+```bash
+podman machine init --memory 8192
+podman machine start
+```
+
+3. Install Podman Compose:
+```bash
+pip install podman-compose
+```
+
+### Starting the Application
+
+1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd medicare-rag
+cd medicare-chatbot
 ```
 
-2. Start the application:
+2. Start all services:
 ```bash
-docker-compose up -d
+podman-compose up -d
 ```
 
-This will:
-- Start Ollama with Mistral model
-- Initialize ChromaDB
-- Start the Django backend
+3. Apply database migrations:
+```bash
+podman-compose exec web python manage.py migrate
+```
 
-3. Access the application:
-- API: http://localhost:8000
-- ChromaDB: http://localhost:8001
-- Ollama: http://localhost:11434
+4. Pull the Mistral model:
+```bash
+podman-compose exec ollama ollama pull mistral
+# This may take several minutes on first run (model is ~4GB)
+```
 
-## Your Tasks
+### Verify Setup
 
-### Core Requirements
-1. Implement PDF processing functionality:
-   - Extract text from provided Medicare plan PDFs
-   - Clean and structure the extracted content
-   - Handle document sections and metadata
+1. Check all services are running:
+```bash
+podman ps
+# Should see three containers: web, chromadb, and ollama
+```
 
-2. Implement RAG functionality:
-   - Set up vector storage and retrieval
-   - Generate responses using Mistral
-   - Handle plan comparison queries
+2. Test each service:
+```bash
+# Test Django API
+curl http://localhost:8000/api/health/
 
-3. Complete the TODOs in:
+# Test ChromaDB
+curl http://localhost:8001/api/v1/heartbeat
+
+# Test Ollama/Mistral (after model is pulled)
+curl -X POST http://localhost:11434/api/generate -d '{
+  "model": "mistral",
+  "prompt": "Hello!"
+}'
+```
+
+
+## Assignment Goal
+
+Implement a RAG-based API that can accurately answer these three specific questions about the provided Medicare plan PDFs:
+
+1. "What is the monthly premium for 007?"
+
+2. "Compare the emergency care coverage between 056 and 002."
+
+3. "What are all the $0 copay services in 003?"
+
+To answer these question, complete the TODOs in:
    - `pdf_processor/extraction.py`
    - `pdf_processor/embeddings.py`
    - `pdf_processor/rag_chain.py`
 
-### Testing Your Implementation
-The API should handle queries like:
-```
-- "What is the monthly premium for Plan A?"
-- "Compare the dental coverage between Plan A and Plan B"
-- "What services require prior authorization in Plan C?"
-- "What are the copays for specialist visits?"
+## API Endpoints
+
+### Query Endpoint
+```bash
+POST /api/query/
+{
+    "query": "What is the copay for primary care visits?",
+    "plan_ids": ["plan_a", "plan_b"]  # Optional
+}
 ```
 
-## Project Structure
-```
-medicare_rag/
-├── data/
-│   ├── raw_pdfs/        # Original PDFs provided
-│   │   ├── plan_a_2024.pdf
-│   │   ├── plan_b_2024.pdf
-│   │   └── plan_c_2024.pdf
-│   └── processed/       # For processed data
-├── docker/
-│   └── entrypoint.sh    # Docker entrypoint script
-├── pdf_processor/       # Core implementation area
-│   ├── extraction.py    # PDF processing
-│   ├── embeddings.py    # Vector store handling
-│   └── rag_chain.py     # RAG implementation
-├── api/                # Django API app
-│   ├── views.py        # API endpoints
-│   ├── urls.py         # URL routing
-│   └── serializers.py  # Request/response serialization
-└── [Other configuration files]
+### PDF Upload Endpoint
+```bash
+POST /api/upload-pdf/
+Content-Type: multipart/form-data
+{
+    "file": [PDF File],
+    "plan_id": "plan_a",
+    "year": 2024
+}
 ```
 
 ## Evaluation Criteria
@@ -112,66 +162,42 @@ medicare_rag/
 - Assumptions documented
 - Clear code comments
 
-## API Endpoints
-
-### Query Endpoint
-```bash
-POST /api/query/
-{
-    "query": "What is the copay for primary care visits?",
-    "plan_ids": ["plan_a", "plan_b"]  # Optional
-}
-```
-
-### PDF Upload Endpoint
-```bash
-POST /api/upload-pdf/
-Content-Type: multipart/form-data
-{
-    "file": [PDF File],
-    "plan_id": "plan_a",
-    "year": 2024
-}
-```
-
-## Sample PDFs
-The `data/raw_pdfs/` directory contains Medicare Summary of Benefits PDFs. Each document includes:
-- Plan benefits and coverage
-- Cost sharing information
-- Network details
-- Additional benefits
-
-## Submission Instructions
-1. Create a private repository (do not fork)
-2. Push your solution
-3. Share access with [EVALUATOR_USERNAME]
-4. Include in your README:
-   - Setup instructions
-   - Implementation approach
-   - Assumptions made
-   - Potential improvements
-
-## Notes
-- Focus on the core PDF processing and RAG implementation
-- The provided structure handles API endpoints and basic setup
-- You can modify any part of the code, but explain significant changes
-- Include comments explaining key decisions
-
 ## Troubleshooting
 
-### Podman-Specific Issues
-
-If using Podman and encountering permissions issues:
+If you encounter memory issues:
 ```bash
-# Fix SELinux context if needed (RHEL/Fedora)
-chcon -Rt container_file_t ./data
+# Check Podman machine resources
+podman machine info
 
-# Fix permissions
-chmod -R 755 ./data
+# If needed, recreate with more memory
+podman machine stop
+podman machine rm
+podman machine init --memory 8192 --disk-size 20  # For Apple Silicon
+podman machine start
 ```
 
-If Podman network issues occur:
+Common issues and solutions:
+1. **Mistral model fails to load**:
+   - Ensure Podman machine has enough memory
+   - Try restarting the Ollama container
+   - Check Ollama logs: `podman-compose logs ollama`
+
+2. **ChromaDB connection issues**:
+   - Ensure ports aren't in use
+   - Check logs: `podman-compose logs chromadb`
+
+3. **General troubleshooting**:
 ```bash
-# Create network if needed
-podman network create medicare_net
+# View logs
+podman-compose logs web
+podman-compose logs chromadb
+podman-compose logs ollama
+
+# Restart specific service
+podman-compose restart <service_name>
+
+# Complete reset
+podman-compose down
+podman pod rm -f pod_medicare-chatbot
+podman-compose up -d
 ```

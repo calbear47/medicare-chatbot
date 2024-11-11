@@ -24,7 +24,6 @@ async def query_plans(request):
             return Response({
                 'response': result.response,
                 'sources': result.source_documents,
-                'confidence': result.confidence_score
             })
         except Exception as e:
             logger.error(f"Error processing query: {str(e)}")
@@ -55,8 +54,7 @@ def upload_pdf(request):
 
             return Response({
                 'message': 'PDF processed successfully',
-                'plan_id': plan_id,
-                'sections_found': list(extracted_plan.sections.keys())
+                'plan_id': plan_id
             })
         except Exception as e:
             logger.error(f"Error processing PDF: {str(e)}")

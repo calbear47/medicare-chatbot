@@ -5,3 +5,5 @@ __pycache__
 .gitignore
 .pytest_cache
 data/processed/*
+db.sqlite3
+.DS_Store
